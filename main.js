@@ -35,24 +35,23 @@ const bgTexture = new THREE.TextureLoader().load("2k_stars_milky_way.jpg", (text
 });
 
 let canvas = renderer.domElement;
-let mouseDown = false, mouseX = 0;
-// let mouseY = 0;
+let mouseDown = false, mouseX = 0, mouseY = 0;
 
 canvas.addEventListener("mousedown", (event) => {
     event.preventDefault();
     mouseDown = true;
     mouseX = event.clientX;
-    // mouseY = event.clientY;
+    mouseY = event.clientY;
 });
 
 canvas.addEventListener("mousemove", event => {
     event.preventDefault();
     if (!mouseDown) return;
     let deltaX = event.clientX - mouseX;
-    // let deltaY = event.clientY - mouseY;
+    let deltaY = event.clientY - mouseY;
     mouseX = event.clientX;
-    // mouseY = event.clientY;
-    handleMouseDrag(deltaX);
+    mouseY = event.clientY;
+    handleMouseDrag(deltaX, deltaY);
 });
 
 canvas.addEventListener("mouseup", event => {
@@ -60,8 +59,9 @@ canvas.addEventListener("mouseup", event => {
     mouseDown = false;
 })
 
-function handleMouseDrag(x) {
+function handleMouseDrag(x, y) {
     sphere.rotation.y += 0.005 * x;
+    sphere.rotation.x += 0.005 * y;
 }
 
 function draw() {
