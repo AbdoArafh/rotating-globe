@@ -61,8 +61,8 @@ canvas.addEventListener("mouseup", event => {
 })
 
 function handleMouseDrag(x, y) {
-    sphere.rotation.y += 0.005 * x;
-    sphere.rotation.x += 0.005 * y;
+    sphere.rotation.y += rotationSpeed * x;
+    sphere.rotation.x += rotationSpeed * y;
 }
 
 function draw() {
