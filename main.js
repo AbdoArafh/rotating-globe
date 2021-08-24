@@ -36,6 +36,7 @@ const bgTexture = new THREE.TextureLoader().load("2k_stars_milky_way.jpg", (text
 
 let canvas = renderer.domElement;
 let mouseDown = false, mouseX = 0, mouseY = 0;
+let rotationSpeed = 0.005;
 
 canvas.addEventListener("mousedown", (event) => {
     event.preventDefault();
@@ -65,7 +66,7 @@ function handleMouseDrag(x, y) {
 }
 
 function draw() {
-  sphere.rotation.y += 0.005;
+  if (!mouseDown) sphere.rotation.y += rotationSpeed;
 }
 
 function animate() {
