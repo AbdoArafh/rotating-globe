@@ -88,13 +88,13 @@ class Curve {
     let t = random(-Math.PI, Math.PI);
     this.x = Math.cos(a) * Math.sin(t);
     this.y = Math.sin(a) * Math.sin(t);
-    let z = Math.cos(a);
-    this.rx = 0.5;
-    this.ry = 0.5;
+    this.z = Math.cos(a);
+    this.rx = 0.25;
+    this.ry = 0.25;
     this.start = 0;
     this.end = 2;
 
-    this.curve = new THREE.EllipseCurve(this.x, this.y, this.rx, this.ry, this.start, this.end);
+    this.curve = new THREE.EllipseCurve(0, 0, this.rx, this.ry, this.start, this.end);
 
     let curvePoints = this.curve.getPoints(50);
     let curveGeometry = new THREE.BufferGeometry().setFromPoints(curvePoints);
@@ -102,16 +102,26 @@ class Curve {
     let curveMaterial = new THREE.LineBasicMaterial({ color: 0xb75498 });
 
     this.ellipse = new THREE.Line(curveGeometry, curveMaterial);
-    this.ellipse.rotation.set(0, 0, t);
+    
+    this.pivot = new THREE.Object3D();
 
-    scene.add(this.ellipse);
+    this.pivot.position.set(this.x, this.y, this.z);
+
+    this.pivot.add(this.ellipse);
+
+    scene.add(this.pivot);
+
+
   }
 
   update(sphereRotation) {
     this.value += 0.01;
-    this.ellipse.position.set(0, 0);
-    this.ellipse.rotation.set(0, sphereRotation, this.value);
-    this.ellipse.position.set(this.x, this.y);
+
+    this.pivot.rotation.set(sphereRotation.x, sphereRotation.y, this.value);
+
+    // this.x = ;
+    // this.y = ;
+    // this.z = ;
   }
 }
 
@@ -124,7 +134,7 @@ for (let i = 0; i < 10; i++) {
 
 function draw() {
   if (!mouseDown) sphere.rotation.y += rotationSpeed;
-  curves.forEach(curve => curve.update(sphere.rotation.y));
+  curves.forEach(curve => curve.update(sphere.rotation));
 }
 
 let anim = true;
