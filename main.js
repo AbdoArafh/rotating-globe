@@ -24,7 +24,7 @@ const sphere = new THREE.Mesh(geometry, material);
 const directionalLight = new THREE.DirectionalLight(0xffff00, 1);
 scene.add(directionalLight);
 
-scene.add(sphere);
+// scene.add(sphere);
 
 camera.position.z = 2;
 
@@ -92,36 +92,61 @@ class Curve {
     this.rx = 0.25;
     this.ry = 0.25;
     this.start = 0;
-    this.end = 2;
+    this.end = Math.PI * 2;
 
-    this.curve = new THREE.EllipseCurve(0, 0, this.rx, this.ry, this.start, this.end);
+    this.curve = new THREE.EllipseCurve(this.x, this.y, this.rx, this.ry, this.start, this.end);
 
-    let curvePoints = this.curve.getPoints(50);
-    let curveGeometry = new THREE.BufferGeometry().setFromPoints(curvePoints);
+    this.points = this.curve.getPoints(50);
+
+    this.len = 25;
+    
+    let curveGeometry = new THREE.BufferGeometry().setFromPoints(this.points);
 
     let curveMaterial = new THREE.LineBasicMaterial({ color: 0xb75498 });
 
-    this.ellipse = new THREE.Line(curveGeometry, curveMaterial);
-    
-    this.pivot = new THREE.Object3D();
+    this.trail = new THREE.Line(curveGeometry, curveMaterial);
 
-    this.pivot.position.set(this.x, this.y, this.z);
+    scene.add(this.trail);
+  }
 
-    this.pivot.add(this.ellipse);
+  // iters(a, b) {
+  //   let n = 0;
+  //   while (a > 0) {
+  //     a = a - b;
+  //     n++;
+  //   }
+  //   return n;
+  // }
 
-    scene.add(this.pivot);
+  // slice() {
+  //   let len = this.points.length;
+  //   let start = this.value;
+  //   let end = start + this.len;
+  //   if (start > end % len) {
+  //     let first = this.points.slice(0, start);
+  //     let inBetween = [];
+  //     let last = this.points.slice(end, len);
+  //     let n = this.iters(end, len);
+  //     for (let i = 0; i < n; i++) {
+  //       inBetween.concat(this.points);
+  //     }
+  //     return [...first, ...inBetween, ...last];
+  //   }
+  //   return this.points.slice(start, end);
+  // }
 
-
+  slice() {
+    let s = this.value % this.points.length;
+    let e = (s + this.len) % this.points.length;
+    if (e > s) return this.points.slice(0, s).concat(this.points.slice(e, this.points.length));
+    return this.points.slice(e, s);
   }
 
   update(sphereRotation) {
-    this.value += 0.01;
-
-    this.pivot.rotation.set(sphereRotation.x, sphereRotation.y, this.value);
-
-    // this.x = ;
-    // this.y = ;
-    // this.z = ;
+    this.value += 1;
+    this.currentPoints = this.slice();
+    this.curveGeometry = new THREE.BufferGeometry().setFromPoints(this.currentPoints);
+    this.trail.geometry = this.curveGeometry;
   }
 }
 
