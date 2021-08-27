@@ -1,28 +1,49 @@
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(
+import {
+  Scene,
+  PerspectiveCamera,
+  WebGLRenderer,
+  MeshLambertMaterial,
+  ShaderMaterial,
+  SphereGeometry,
+  AdditiveBlending,
+  BackSide,
+  Mesh,
+  DirectionalLight,
+  PointLight,
+  AmbientLight,
+  TextureLoader,
+  Fog,
+  EllipseCurve,
+  BufferGeometry,
+  LineBasicMaterial,
+  Line,
+} from "three";
+import "./create-map/images/output/map7.png";
+import "./maps/2k_stars_milky_way.jpg";
+
+const scene = new Scene();
+const camera = new PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
   0.1,
   150
 );
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new WebGLRenderer({ antialias: true });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 document.getElementById("globe").appendChild(renderer.domElement);
 
-let geometry = new THREE.SphereGeometry();
+let geometry = new SphereGeometry();
 
-const globeTexture = new THREE.TextureLoader().load(
-  "create-map/images/output/map7.png"
-);
+const globeTexture = new TextureLoader().load("map7.png");
 
-let material = new THREE.MeshLambertMaterial({
+let material = new MeshLambertMaterial({
   map: globeTexture,
 });
 
-// let material = new THREE.ShaderMaterial({
+// let material = new ShaderMaterial({
 //   vertexShader: `
 //   varying vec3 vectorNormal;
 //   varying vec2 vertexUV;
@@ -55,13 +76,13 @@ let material = new THREE.MeshLambertMaterial({
 
 // material.map = globeTexture;
 
-const sphere = new THREE.Mesh(geometry, material);
+const sphere = new Mesh(geometry, material);
 
 scene.add(sphere);
 
-let glowGeometry = new THREE.SphereGeometry();
+let glowGeometry = new SphereGeometry();
 
-let glowMaterial = new THREE.ShaderMaterial({
+let glowMaterial = new ShaderMaterial({
   vertexShader: `
   varying vec3 vectorNormal;
     void main() {
@@ -79,11 +100,11 @@ let glowMaterial = new THREE.ShaderMaterial({
     gl_FragColor = vec4(0.3, 0.6, 1.0, 1.0) * intensity;
   }
   `,
-  blending: THREE.AdditiveBlending,
-  side: THREE.BackSide,
+  blending: AdditiveBlending,
+  side: BackSide,
 });
 
-const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+const glow = new Mesh(glowGeometry, glowMaterial);
 
 glow.scale.set(1.1, 1.1, 1.1);
 
@@ -91,28 +112,28 @@ glow.position.set(-0.1, 0.1, 0);
 
 scene.add(glow);
 
-// const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+// const directionalLight = new DirectionalLight(0xffffff, 2);
 // directionalLight.position.set(1, 1, 5);
 // scene.add(directionalLight);
 
-// const pl = new THREE.PointLight(0xff0000, 5, 100);
+// const pl = new PointLight(0xff0000, 5, 100);
 // pl.position.set(-1, 0, 5);
 // scene.add(pl);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 3);
+const ambientLight = new AmbientLight(0xffffff, 3);
 scene.add(ambientLight);
 
 camera.position.z = 2;
 
-const bgTexture = new THREE.TextureLoader().load(
-  "maps/2k_stars_milky_way.jpg",
+const bgTexture = new TextureLoader().load(
+  "2k_stars_milky_way.jpg",
   texture => {
     const bgMat = texture;
     scene.background = bgMat;
   }
 );
 
-scene.fog = new THREE.Fog(0x3d1d45, 0.1, 10);
+scene.fog = new Fog(0x3d1d45, 0.1, 10);
 
 // *----------------------------------- Handle mouse drag --------------------------------*
 
@@ -170,7 +191,7 @@ class Curve {
     this.start = 0;
     this.end = Math.PI * 2;
 
-    this.curve = new THREE.EllipseCurve(
+    this.curve = new EllipseCurve(
       this.x,
       this.y,
       this.rx,
@@ -181,11 +202,11 @@ class Curve {
 
     this.points = this.curve.getPoints(50);
 
-    let curveGeometry = new THREE.BufferGeometry().setFromPoints(this.points);
+    let curveGeometry = new BufferGeometry().setFromPoints(this.points);
 
-    let curveMaterial = new THREE.LineBasicMaterial({ color: 0xb75498 });
+    let curveMaterial = new LineBasicMaterial({ color: 0xb75498 });
 
-    this.trail = new THREE.Line(curveGeometry, curveMaterial);
+    this.trail = new Line(curveGeometry, curveMaterial);
 
     scene.add(this.trail);
   }
@@ -229,9 +250,7 @@ class Curve {
   update(sphereRotation) {
     this.value += 1;
     this.currentPoints = this.slice();
-    this.curveGeometry = new THREE.BufferGeometry().setFromPoints(
-      this.currentPoints
-    );
+    this.curveGeometry = new BufferGeometry().setFromPoints(this.currentPoints);
     this.trail.geometry = this.curveGeometry;
     this.trail.rotation.set(0, sphereRotation.y, 0);
   }
