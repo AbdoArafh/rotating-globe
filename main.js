@@ -6,38 +6,113 @@ const camera = new THREE.PerspectiveCamera(
   150
 );
 
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({ antialias: true });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 
-document.body.appendChild(renderer.domElement);
+document.getElementById("globe").appendChild(renderer.domElement);
 
 let geometry = new THREE.SphereGeometry();
 
-const globeTexture = new THREE.TextureLoader().load("2k_earth_nightmap.jpg");
-// const globeTexture = new THREE.TextureLoader().load("world-map.png");
+const globeTexture = new THREE.TextureLoader().load(
+  "create-map/images/output/map7.png"
+);
 
-let material = new THREE.MeshBasicMaterial({ map: globeTexture });
+let material = new THREE.MeshLambertMaterial({
+  map: globeTexture,
+});
+
+// let material = new THREE.ShaderMaterial({
+//   vertexShader: `
+//   varying vec3 vectorNormal;
+//   varying vec2 vertexUV;
+//     void main() {
+//       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+//       vectorNormal = normalize(normal * normalMatrix);
+//       vertexUV = uv;
+//     }
+//   `,
+
+//   fragmentShader: `
+//   varying vec3 vectorNormal;
+//   varying vec2 vertexUV;
+//   uniform sampler2D globeTexture;
+
+//   void main() {
+//     float intensity = 1.05 - dot(vectorNormal, vec3(0.0, 0.0, 1.0));
+//     vec3 atmosphere = vec3(0.6, 0.4, 0.2) * pow(intensity, 1.5);
+//     gl_FragColor = vec4(atmosphere + texture2D(globeTexture, vertexUV).xyz, 1.0);
+//     // gl_FragColor = texture2D(globeTexture, vertexUV);
+//   }
+
+//   `,
+//   uniforms: {
+//     globeTexture: {
+//       value: globeTexture,
+//     },
+//   },
+// });
+
+// material.map = globeTexture;
 
 const sphere = new THREE.Mesh(geometry, material);
 
-const directionalLight = new THREE.DirectionalLight(0xffff00, 1);
-scene.add(directionalLight);
+scene.add(sphere);
 
-// scene.add(sphere);
+let glowGeometry = new THREE.SphereGeometry();
+
+let glowMaterial = new THREE.ShaderMaterial({
+  vertexShader: `
+  varying vec3 vectorNormal;
+    void main() {
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      // vectorNormal = normal;
+      vectorNormal = normalize(normal * normalMatrix);
+    }
+  `,
+
+  fragmentShader: `
+  varying vec3 vectorNormal;
+
+  void main() {
+    float intensity = pow(0.9 - dot(vectorNormal, vec3(0, 0, 1.0)), 2.0);
+    gl_FragColor = vec4(0.3, 0.6, 1.0, 1.0) * intensity;
+  }
+  `,
+  blending: THREE.AdditiveBlending,
+  side: THREE.BackSide,
+});
+
+const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+
+glow.scale.set(1.1, 1.1, 1.1);
+
+glow.position.set(-0.1, 0.1, 0);
+
+scene.add(glow);
+
+// const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+// directionalLight.position.set(1, 1, 5);
+// scene.add(directionalLight);
+
+// const pl = new THREE.PointLight(0xff0000, 5, 100);
+// pl.position.set(-1, 0, 5);
+// scene.add(pl);
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 3);
+scene.add(ambientLight);
 
 camera.position.z = 2;
 
 const bgTexture = new THREE.TextureLoader().load(
-  "2k_stars_milky_way.jpg",
+  "maps/2k_stars_milky_way.jpg",
   texture => {
-    const bgGeo = new THREE.PlaneGeometry(20, 20);
-    const bgMat = new THREE.MeshBasicMaterial({ map: texture });
-    const sky = new THREE.Mesh(bgGeo, bgMat);
-    sky.position.z = -1;
-    scene.add(sky);
+    const bgMat = texture;
+    scene.background = bgMat;
   }
 );
+
+scene.fog = new THREE.Fog(0x3d1d45, 0.1, 10);
 
 // *----------------------------------- Handle mouse drag --------------------------------*
 
@@ -72,6 +147,7 @@ canvas.addEventListener("mouseup", event => {
 function handleMouseDrag(x, y) {
   sphere.rotation.y += rotationSpeed * x;
   sphere.rotation.x += rotationSpeed * y;
+  sphere.rotation.x = clamp(sphere.rotation.x, -0.6, 0.6);
 }
 
 // **
@@ -82,8 +158,8 @@ const random = (s, e) => s + Math.random() * e;
 
 class Curve {
   constructor() {
-    // this.len = 1;
-    this.value = Math.random();
+    this.len = 25;
+    this.value = Math.floor(Math.random() * this.len);
     let a = random(-Math.PI, Math.PI);
     let t = random(-Math.PI, Math.PI);
     this.x = Math.cos(a) * Math.sin(t);
@@ -94,12 +170,17 @@ class Curve {
     this.start = 0;
     this.end = Math.PI * 2;
 
-    this.curve = new THREE.EllipseCurve(this.x, this.y, this.rx, this.ry, this.start, this.end);
+    this.curve = new THREE.EllipseCurve(
+      this.x,
+      this.y,
+      this.rx,
+      this.ry,
+      this.start,
+      this.end
+    );
 
     this.points = this.curve.getPoints(50);
 
-    this.len = 25;
-    
     let curveGeometry = new THREE.BufferGeometry().setFromPoints(this.points);
 
     let curveMaterial = new THREE.LineBasicMaterial({ color: 0xb75498 });
@@ -138,28 +219,41 @@ class Curve {
   slice() {
     let s = this.value % this.points.length;
     let e = (s + this.len) % this.points.length;
-    if (e > s) return this.points.slice(0, s).concat(this.points.slice(e, this.points.length));
+    if (e > s)
+      return this.points
+        .slice(0, s)
+        .concat(this.points.slice(e, this.points.length));
     return this.points.slice(e, s);
   }
 
   update(sphereRotation) {
     this.value += 1;
     this.currentPoints = this.slice();
-    this.curveGeometry = new THREE.BufferGeometry().setFromPoints(this.currentPoints);
+    this.curveGeometry = new THREE.BufferGeometry().setFromPoints(
+      this.currentPoints
+    );
     this.trail.geometry = this.curveGeometry;
+    this.trail.rotation.set(0, sphereRotation.y, 0);
   }
 }
 
-const curves = [];
-for (let i = 0; i < 10; i++) {
-    curves.push(new Curve())
-}
+// *-----------------------------------making curves------------------------------------*
+
+// const curves = [];
+// for (let i = 0; i < 10; i++) {
+//   curves.push(new Curve());
+// }
 
 // *--------------------------------- animate -------------------------------*
 
+function clamp(val, min, max) {
+  return val > max ? max : val < min ? min : val;
+}
+
 function draw() {
   if (!mouseDown) sphere.rotation.y += rotationSpeed;
-  curves.forEach(curve => curve.update(sphere.rotation));
+  // console.log(sphere.rotation.x);
+  // curves.forEach(curve => curve.update(sphere.rotation));
 }
 
 let anim = true;

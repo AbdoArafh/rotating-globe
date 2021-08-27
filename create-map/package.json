@@ -1,0 +1,19 @@
+{
+  "name": "create-map",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "image-pixels": "^2.2.2"
+  },
+  "devDependencies": {
+    "canvas": "^2.8.0"
+  }
+}
