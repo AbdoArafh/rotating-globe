@@ -9,6 +9,9 @@ module.exports = {
     path: path.resolve(__dirname, "dist"),
   },
   mode: "production",
+  optimization: {
+    usedExports: true,
+  },
   module: {
     rules: [
       {

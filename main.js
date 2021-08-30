@@ -12,7 +12,6 @@ import {
   PointLight,
   AmbientLight,
   TextureLoader,
-  Fog,
   EllipseCurve,
   BufferGeometry,
   LineBasicMaterial,
@@ -21,19 +20,19 @@ import {
 import "./create-map/images/output/map7.png";
 import "./maps/2k_stars_milky_way.jpg";
 
+const globeElement = document.getElementById("globe");
+
+const WIDTH = window.innerWidth;
+const HEIGHT = window.innerHeight;
+
 const scene = new Scene();
-const camera = new PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  150
-);
+const camera = new PerspectiveCamera(75, WIDTH / HEIGHT, 0.1, 150);
 
 const renderer = new WebGLRenderer({ antialias: true });
 
-renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setSize(WIDTH, HEIGHT);
 
-document.getElementById("globe").appendChild(renderer.domElement);
+globeElement.appendChild(renderer.domElement);
 
 let geometry = new SphereGeometry();
 
@@ -42,39 +41,6 @@ const globeTexture = new TextureLoader().load("map7.png");
 let material = new MeshLambertMaterial({
   map: globeTexture,
 });
-
-// let material = new ShaderMaterial({
-//   vertexShader: `
-//   varying vec3 vectorNormal;
-//   varying vec2 vertexUV;
-//     void main() {
-//       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-//       vectorNormal = normalize(normal * normalMatrix);
-//       vertexUV = uv;
-//     }
-//   `,
-
-//   fragmentShader: `
-//   varying vec3 vectorNormal;
-//   varying vec2 vertexUV;
-//   uniform sampler2D globeTexture;
-
-//   void main() {
-//     float intensity = 1.05 - dot(vectorNormal, vec3(0.0, 0.0, 1.0));
-//     vec3 atmosphere = vec3(0.6, 0.4, 0.2) * pow(intensity, 1.5);
-//     gl_FragColor = vec4(atmosphere + texture2D(globeTexture, vertexUV).xyz, 1.0);
-//     // gl_FragColor = texture2D(globeTexture, vertexUV);
-//   }
-
-//   `,
-//   uniforms: {
-//     globeTexture: {
-//       value: globeTexture,
-//     },
-//   },
-// });
-
-// material.map = globeTexture;
 
 const sphere = new Mesh(geometry, material);
 
@@ -87,8 +53,7 @@ let glowMaterial = new ShaderMaterial({
   varying vec3 vectorNormal;
     void main() {
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      // vectorNormal = normal;
-      vectorNormal = normalize(normal * normalMatrix);
+      vectorNormal = normalize(normalMatrix * normal);
     }
   `,
 
@@ -132,8 +97,6 @@ const bgTexture = new TextureLoader().load(
     scene.background = bgMat;
   }
 );
-
-scene.fog = new Fog(0x3d1d45, 0.1, 10);
 
 // *----------------------------------- Handle mouse drag --------------------------------*
 
